@@ -13,7 +13,7 @@ def handle_user_event(event):
             gen[event.user_id] = select_find_users(event.user_id)
             Bot().next_user(event.user_id, next(gen[event.user_id]), '')
             Bot().write_msg(event.user_id, f'Жми "Ещё"')
-        elif event.text.lower() == 'поиск по':
+        elif event.text.lower() == 'поиск по параметрам':
             Bot().delete_users_find(event.user_id)
             Bot().insert_user(event.user_id)
             Bot().find_users_param(event.user_id)
@@ -25,8 +25,8 @@ def handle_user_event(event):
             next_user = next(gen[event.user_id])
             Bot().next_user(event.user_id, next_user, '')
             Bot().write_msg(event.user_id, f'Нашёл для тебя пару:')
-        elif event.text.lower() == 'ещё' and event.user_id not in gen:
-            Bot().write_msg(event.user_id, 'Сначала начните поиск с помощью команды "Поиск" или "Поиск по"')
+        else:
+            Bot().write_msg(event.user_id, 'Сначала начните поиск с помощью команды "Поиск" или "Поиск по параметрам"')
 
 def listen_for_events():
     for event in Bot().longpoll.listen():
