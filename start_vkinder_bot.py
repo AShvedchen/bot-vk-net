@@ -24,7 +24,6 @@ def handle_user_event(event):
         elif event.text.lower() == 'ещё' and event.user_id in gen:
             next_user = next(gen[event.user_id])
             Bot().next_user(event.user_id, next_user, '')
-            Bot().write_msg(event.user_id, f'Нашёл для тебя пару:')
 
 def listen_for_events():
     for event in Bot().longpoll.listen():
