@@ -7,6 +7,7 @@ from database_bot import *
 from data_config import *
 from vkinder_keyboard import keyboard
 
+
 class Bot:
     def __init__(self):
         self.vk = vk_api.VkApi(token=club_token)
@@ -20,14 +21,14 @@ class Bot:
                                          'random_id': randrange(10 ** 7)})
 
     def age_from(self, user_id):
-            self.write_msg(user_id, 'Введите возраст поиска от: ')
-            for event in self.longpoll.listen():
-                if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-                    age_from = event.text
-                    if age_from.isdigit() and 18 <= int(age_from) <= 70:
-                        return int(age_from)
-                    else:
-                        self.write_msg(user_id, 'Возраст должен быть целым числом, попробуйте еще раз.')
+        self.write_msg(user_id, 'Введите возраст поиска от: ')
+        for event in self.longpoll.listen():
+            if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+                age_from = event.text
+                if age_from.isdigit() and 18 <= int(age_from) <= 70:
+                    return int(age_from)
+                else:
+                    self.write_msg(user_id, 'Возраст должен быть целым числом, попробуйте еще раз.')
 
     def age_to(self, user_id):
         self.write_msg(user_id, 'Введите возраст поиска до: ')
@@ -38,7 +39,6 @@ class Bot:
                     return int(age_to)
                 else:
                     self.write_msg(user_id, 'Возраст должен быть целым числом, попробуйте еще раз.')
-
 
     def insert_user(self, user_id):
         response = self.vk.method('users.get', {'user_ids': user_id,
@@ -53,8 +53,8 @@ class Bot:
             user_sex = data['sex']
             user_city = data.get('city', {}).get('id')
             user_city = None if user_city is None else user_city
-
             return insert_users_vk(first_name, last_name, vk_id, user_birthday, user_sex, user_city)
+
     def find_city(self, user_id):
         while True:
             self.write_msg(user_id, 'Введите город для поиска: ')
@@ -70,7 +70,6 @@ class Bot:
                     else:
                         self.write_msg(user_id, 'Город не найден, попробуйте еще раз.')
 
-
     def calculate_age(self, birthdate):
         birthdate = datetime.strptime(birthdate, '%d.%m.%Y')
         today = date.today()
@@ -79,29 +78,28 @@ class Bot:
 
     def find_users(self, user_id, search_params):
         if not search_params:
-                # Получаем значение параметра age_from из базы данных
-                age_from = select_param_user(user_id)[3]
-                if not age_from or len(age_from) < 5:
-                    age_from = self.age_from(user_id)
-                if "." in str(age_from) and len(str(age_from).split(".")) == 3:
-                    age_from = self.calculate_age(age_from)
+            # Получаем значение параметра age_from из базы данных
+            age_from = select_param_user(user_id)[3]
+            if not age_from or len(age_from) < 5:
+                age_from = self.age_from(user_id)
+            if "." in str(age_from) and len(str(age_from).split(".")) == 3:
+                age_from = self.calculate_age(age_from)
 
-                # Получаем значение параметра city из базы данных
-                city = select_param_user(user_id)[2]
-                if not city:
-                    city = self.find_city(user_id)
+            # Получаем значение параметра city из базы данных
+            city = select_param_user(user_id)[2]
+            if not city:
+                city = self.find_city(user_id)
 
-                search_params.update({
-                    'v': '5.131',
-                    'sex': 2 if int(select_param_user(user_id)[0]) == 1 else 1,
-                    'age_from': age_from,
-                    'city': city,
-                    'fields': 'is_closed, id, first_name, last_name',
-                    'status': '1' or '6',
-                    'has_photo': '1',
-                    'count': 999
-                })
-
+            search_params.update({
+                'v': '5.131',
+                'sex': 2 if int(select_param_user(user_id)[0]) == 1 else 1,
+                'age_from': age_from,
+                'city': city,
+                'fields': 'is_closed, id, first_name, last_name',
+                'status': '1' or '6',
+                'has_photo': '1',
+                'count': 999
+            })
         try:
             # Выполняем запрос к VK API для поиска пользователей
             response = self.user.method('users.search', search_params)['items']
@@ -127,7 +125,6 @@ class Bot:
             # выводим информацию по каждой записи
             for user in users_list:
                 yield user
-
         except Exception as e:
             # обрабатываем ошибку
             self.write_msg(user_id, f'Произошла ошибка: {e}. Попробуйте еще раз позже.')
@@ -144,16 +141,12 @@ class Bot:
         list_photo = [f'photo{photo["owner_id"]}_{photo["id"]}' for photo in album_photo]
         return f'{",".join(list_photo)}'
 
-
     def next_user(self, user_id, gen, message):
         self.write_msg(user_id, f'{" ".join((gen)[:3])}')
         insert_viewed_user(user_id, gen[3], gen[2])
         self.vk.method('messages.send', {'user_id': user_id,
-                                             'access_token': user_token,
-                                             'message': message,
-                                             'attachment': self.find_photo(gen),
-                                             'random_id': 0})
+                                         'access_token': user_token,
+                                         'message': message,
+                                         'attachment': self.find_photo(gen),
+                                         'random_id': 0})
         return
-
-
-
