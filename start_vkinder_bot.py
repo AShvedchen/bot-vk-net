@@ -8,7 +8,7 @@ def handle_user_event(event):
     if event.type == VkEventType.MESSAGE_NEW and event.to_me:
         if event.text.lower() == 'поиск':
             Bot().insert_user(event.user_id)
-            gen[event.user_id] = Bot().find_users(event.user_id, search_params={})
+            gen[event.user_id] = Bot().find_users(event.user_id, params=False)
             try:
                 next_user = next(gen[event.user_id])
             except StopIteration:
@@ -21,18 +21,7 @@ def handle_user_event(event):
                 Bot().write_msg(event.user_id, f'Жми "Ещё"')
         elif event.text.lower() == 'поиск по параметрам':
             Bot().insert_user(event.user_id)
-            params = {
-                'v': '5.131',
-                'sex': 2 if int(select_param_user(event.user_id)[0]) == 1 else 1,
-                'age_from': Bot().age_from(event.user_id),
-                'age_to': Bot().age_to(event.user_id),
-                'city': Bot().find_city(event.user_id),
-                'fields': 'is_closed, id, first_name, last_name',
-                'status': '6',
-                'has_photo': '1',
-                'count': 999
-            }
-            gen[event.user_id] = Bot().find_users(event.user_id, search_params=params)
+            gen[event.user_id] = Bot().find_users(event.user_id, params=True)
             try:
                 next_user = next(gen[event.user_id])
             except StopIteration:
@@ -53,6 +42,8 @@ def handle_user_event(event):
             else:
                 Bot().next_user(event.user_id, next_user, '')
                 Bot().write_msg(event.user_id, f'Жми "Ещё"')
+        else:
+            Bot().write_msg(event.user_id, f'.')
 
 
 def listen_for_events():

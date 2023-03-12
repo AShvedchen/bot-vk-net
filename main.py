@@ -13,6 +13,12 @@ class Bot:
         self.vk = vk_api.VkApi(token=club_token)
         self.user = vk_api.VkApi(token=user_token)
         self.longpoll = VkLongPoll(self.vk)
+        self.search_params_common = {
+            'v': '5.131',
+            'fields': 'is_closed, id, first_name, last_name',
+            'has_photo': '1',
+            'count': 1000
+        }
 
     def write_msg(self, user_id, message):
         self.vk.method('messages.send', {'user_id': user_id,
@@ -76,57 +82,65 @@ class Bot:
         age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
         return age
 
-    def find_users(self, user_id, search_params):
-        if not search_params:
-            # Получаем значение параметра age_from из базы данных
+    def find_users(self, user_id, params):
+        if not params:
             age_from = select_param_user(user_id)[3]
             if not age_from or len(age_from) < 5:
                 age_from = self.age_from(user_id)
             if "." in str(age_from) and len(str(age_from).split(".")) == 3:
                 age_from = self.calculate_age(age_from)
 
-            # Получаем значение параметра city из базы данных
             city = select_param_user(user_id)[2]
             if not city:
                 city = self.find_city(user_id)
+            age_to = age_from + 20
+        else:
+            age_from = self.age_from(user_id)
+            age_to = self.age_to(user_id)
+            city = self.find_city(user_id)
 
-            search_params.update({
-                'v': '5.131',
-                'sex': 2 if int(select_param_user(user_id)[0]) == 1 else 1,
-                'age_from': age_from,
-                'city': city,
-                'fields': 'is_closed, id, first_name, last_name',
-                'status': '6',
-                'has_photo': '1',
-                'count': 999
-            })
+        search_params_common = self.search_params_common.copy()
+        search_params_common.update({
+            'sex': 2 if int(select_param_user(user_id)[0]) == 1 else 1,
+            'age_from': age_from,
+            'age_to': age_to,
+            'city': city,
+        })
+
+        search_params_1 = {
+            **search_params_common,
+            'status': '6'
+        }
+
+        search_params_2 = {
+            **search_params_common,
+            'status': '1'
+        }
         try:
-            # Выполняем запрос к VK API для поиска пользователей
-            response = self.user.method('users.search', search_params)['items']
+            response_1 = self.user.method('users.search', search_params_1)['items']
+            response_2 = self.user.method('users.search', search_params_2)['items']
 
-            # Обрабатываем результаты поиска
+            response = response_1 + response_2  # объединяем результаты двух запросов
+
             users_list = []
+
             if not response:
                 self.write_msg(user_id, 'Попробуйте еще раз.')
             else:
                 for data in response:
                     if data["is_closed"] == False:
-                        # проверяем, был ли этот пользователь уже просмотрен
                         viewed_user = select_viewed_user(data['id'], user_id)
                         if viewed_user is None:
-                            # формируем список пользователей
                             user = [data["first_name"].replace("'", ''), data["last_name"].replace("'", ''),
                                     "vk.com/id" + str(data["id"]), str(data["id"])]
                             users_list.append(user)
                         else:
-                            # пользователь уже просмотрен, пропускаем его
                             pass
 
-            # выводим информацию по каждой записи
             for user in users_list:
                 yield user
+
         except Exception as e:
-            # обрабатываем ошибку
             self.write_msg(user_id, f'Произошла ошибка: {e}. Попробуйте еще раз позже.')
 
     def find_photo(self, gen):
