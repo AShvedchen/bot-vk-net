@@ -28,7 +28,7 @@ def handle_user_event(event):
                 'age_to': Bot().age_to(event.user_id),
                 'city': Bot().find_city(event.user_id),
                 'fields': 'is_closed, id, first_name, last_name',
-                'status': '1' or '6',
+                'status': '6',
                 'has_photo': '1',
                 'count': 999
             }
