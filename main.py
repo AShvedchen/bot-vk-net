@@ -96,7 +96,7 @@ class Bot:
                 'age_from': age_from,
                 'city': city,
                 'fields': 'is_closed, id, first_name, last_name',
-                'status': '1' or '6',
+                'status': '6',
                 'has_photo': '1',
                 'count': 999
             })
