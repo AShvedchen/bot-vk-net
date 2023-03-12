@@ -42,8 +42,6 @@ def handle_user_event(event):
             else:
                 Bot().next_user(event.user_id, next_user, '')
                 Bot().write_msg(event.user_id, f'Жми "Ещё"')
-        else:
-            Bot().write_msg(event.user_id, f'.')
 
 
 def listen_for_events():
